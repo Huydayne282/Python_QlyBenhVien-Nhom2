@@ -126,41 +126,167 @@ class LichKhamForm(tk.Frame):
         form_frame = tk.Frame(main_frame, bg="white")
         form_frame.pack(padx=30, pady=10)
 
-        # Mã BN
+        # Mã BN với thông tin đầy đủ
         tk.Label(form_frame, text="Mã Bệnh nhân:", font=("Arial", 11, "bold"),
                  bg="white", fg="#333").grid(row=0, column=0, padx=10, pady=12, sticky="w")
         e_bn = tk.Entry(form_frame, width=35, font=("Arial", 11))
         e_bn.grid(row=0, column=1, padx=10, pady=12)
+
+        # Label hiển thị thông tin BN
         lbl_bn_info = tk.Label(form_frame, text="", font=("Arial", 9), bg="white", fg="#0066cc")
         lbl_bn_info.grid(row=1, column=1, sticky="w", padx=10)
 
         def show_bn_list():
-            bn_data = execute_query("SELECT MaBenhNhan, HoTen, SoDienThoai FROM BenhNhan ORDER BY MaBenhNhan", fetch=True)
-            self.show_list_window(dialog, "Danh sách bệnh nhân", bn_data, ["Mã", "Họ tên", "SĐT"], e_bn, lbl_bn_info, lambda v: f"✓ {v[1]} - SĐT: {v[2]}")
+            bn_data = execute_query("SELECT MaBenhNhan, HoTen, SoDienThoai FROM BenhNhan ORDER BY MaBenhNhan",
+                                    fetch=True)
+            list_window = tk.Toplevel(dialog)
+            list_window.title("Danh sách bệnh nhân")
+            list_window.geometry("700x450")
 
-        # Mã BS
+            # Tạo frame chứa treeview và scrollbar
+            tree_frame = tk.Frame(list_window)
+            tree_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+            cols = ("Mã", "Họ tên", "SĐT")
+            tree = ttk.Treeview(tree_frame, columns=cols, show="headings", height=15)
+
+            # Định nghĩa headings và columns
+            tree.heading("Mã", text="Mã")
+            tree.heading("Họ tên", text="Họ tên")
+            tree.heading("SĐT", text="SĐT")
+
+            tree.column("Mã", width=100, anchor="center")
+            tree.column("Họ tên", width=300, anchor="w")
+            tree.column("SĐT", width=200, anchor="center")
+
+            # Thêm scrollbar
+            vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
+            tree.configure(yscrollcommand=vsb.set)
+            tree.pack(side="left", fill="both", expand=True)
+            vsb.pack(side="right", fill="y")
+
+            # Thêm dữ liệu
+            for row in bn_data:
+                tree.insert("", "end", values=row)
+
+            def chon():
+                sel = tree.selection()
+                if sel:
+                    values = tree.item(sel[0], "values")
+                    e_bn.delete(0, tk.END)
+                    e_bn.insert(0, values[0])
+                    lbl_bn_info.config(text=f"✓ {values[1]} - SĐT: {values[2]}")
+                    list_window.destroy()
+
+            btn_frame = tk.Frame(list_window)
+            btn_frame.pack(pady=10)
+            tk.Button(btn_frame, text="Chọn", command=chon, bg="#007acc", fg="white",
+                      font=("Arial", 11, "bold"), width=15).pack(pady=10)
+
+        # Mã BS với thông tin đầy đủ
         tk.Label(form_frame, text="Mã Bác sĩ:", font=("Arial", 11, "bold"),
                  bg="white", fg="#333").grid(row=2, column=0, padx=10, pady=12, sticky="w")
         e_bs = tk.Entry(form_frame, width=35, font=("Arial", 11))
         e_bs.grid(row=2, column=1, padx=10, pady=12)
+
+        # Label hiển thị thông tin BS
         lbl_bs_info = tk.Label(form_frame, text="", font=("Arial", 9), bg="white", fg="#0066cc")
         lbl_bs_info.grid(row=3, column=1, sticky="w", padx=10)
 
         def show_bs_list():
             bs_data = execute_query("SELECT MaBacSi, HoTen, ChuyenKhoa FROM BacSi ORDER BY MaBacSi", fetch=True)
-            self.show_list_window(dialog, "Danh sách bác sĩ", bs_data, ["Mã", "Họ tên", "Chuyên khoa"], e_bs, lbl_bs_info, lambda v: f"✓ {v[1]} - {v[2]}")
+            list_window = tk.Toplevel(dialog)
+            list_window.title("Danh sách bác sĩ")
+            list_window.geometry("700x450")
 
-        # Mã Phòng
+            tree_frame = tk.Frame(list_window)
+            tree_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+            cols = ("Mã", "Họ tên", "Chuyên khoa")
+            tree = ttk.Treeview(tree_frame, columns=cols, show="headings", height=15)
+
+            tree.heading("Mã", text="Mã")
+            tree.heading("Họ tên", text="Họ tên")
+            tree.heading("Chuyên khoa", text="Chuyên khoa")
+
+            tree.column("Mã", width=100, anchor="center")
+            tree.column("Họ tên", width=300, anchor="w")
+            tree.column("Chuyên khoa", width=200, anchor="center")
+
+            vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
+            tree.configure(yscrollcommand=vsb.set)
+            tree.pack(side="left", fill="both", expand=True)
+            vsb.pack(side="right", fill="y")
+
+            for row in bs_data:
+                tree.insert("", "end", values=row)
+
+            def chon():
+                sel = tree.selection()
+                if sel:
+                    values = tree.item(sel[0], "values")
+                    e_bs.delete(0, tk.END)
+                    e_bs.insert(0, values[0])
+                    lbl_bs_info.config(text=f"✓ {values[1]} - {values[2]}")
+                    list_window.destroy()
+
+            btn_frame = tk.Frame(list_window)
+            btn_frame.pack(pady=10)
+            tk.Button(btn_frame, text="Chọn", command=chon, bg="#007acc", fg="white",
+                      font=("Arial", 11, "bold"), width=15).pack(pady=10)
+
+        # Mã Phòng với thông tin đầy đủ
         tk.Label(form_frame, text="Mã Phòng:", font=("Arial", 11, "bold"),
                  bg="white", fg="#333").grid(row=4, column=0, padx=10, pady=12, sticky="w")
         e_phong = tk.Entry(form_frame, width=35, font=("Arial", 11))
         e_phong.grid(row=4, column=1, padx=10, pady=12)
+
+        # Label hiển thị thông tin Phòng
         lbl_phong_info = tk.Label(form_frame, text="", font=("Arial", 9), bg="white", fg="#0066cc")
         lbl_phong_info.grid(row=5, column=1, sticky="w", padx=10)
 
         def show_phong_list():
-            phong_data = execute_query("SELECT MaPhong, TenPhong, ChuyenKhoa FROM PhongKham ORDER BY MaPhong", fetch=True)
-            self.show_list_window(dialog, "Danh sách phòng khám", phong_data, ["Mã", "Tên phòng", "Chuyên khoa"], e_phong, lbl_phong_info, lambda v: f"✓ {v[1]} - {v[2]}")
+            phong_data = execute_query("SELECT MaPhong, TenPhong, ChuyenKhoa FROM PhongKham ORDER BY MaPhong",
+                                       fetch=True)
+            list_window = tk.Toplevel(dialog)
+            list_window.title("Danh sách phòng khám")
+            list_window.geometry("700x450")
+
+            tree_frame = tk.Frame(list_window)
+            tree_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+            cols = ("Mã", "Tên phòng", "Chuyên khoa")
+            tree = ttk.Treeview(tree_frame, columns=cols, show="headings", height=15)
+
+            tree.heading("Mã", text="Mã")
+            tree.heading("Tên phòng", text="Tên phòng")
+            tree.heading("Chuyên khoa", text="Chuyên khoa")
+
+            tree.column("Mã", width=100, anchor="center")
+            tree.column("Tên phòng", width=300, anchor="w")
+            tree.column("Chuyên khoa", width=200, anchor="center")
+
+            vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
+            tree.configure(yscrollcommand=vsb.set)
+            tree.pack(side="left", fill="both", expand=True)
+            vsb.pack(side="right", fill="y")
+
+            for row in phong_data:
+                tree.insert("", "end", values=row)
+
+            def chon():
+                sel = tree.selection()
+                if sel:
+                    values = tree.item(sel[0], "values")
+                    e_phong.delete(0, tk.END)
+                    e_phong.insert(0, values[0])
+                    lbl_phong_info.config(text=f"✓ {values[1]} - {values[2]}")
+                    list_window.destroy()
+
+            btn_frame = tk.Frame(list_window)
+            btn_frame.pack(pady=10)
+            tk.Button(btn_frame, text="Chọn", command=chon, bg="#007acc", fg="white",
+                      font=("Arial", 11, "bold"), width=15).pack(pady=10)
 
         # Ngày giờ
         tk.Label(form_frame, text="Ngày giờ:", font=("Arial", 11, "bold"),
@@ -181,12 +307,7 @@ class LichKhamForm(tk.Frame):
         tk.Radiobutton(status_frame, text="Đã khám", variable=status_var,
                        value="Đã khám", bg="white", font=("Arial", 10)).pack(side="left", padx=5)
 
-        # Nút chọn danh sách
-        tk.Button(form_frame, text="...", command=show_bn_list, width=3).grid(row=0, column=2, padx=5)
-        tk.Button(form_frame, text="...", command=show_bs_list, width=3).grid(row=2, column=2, padx=5)
-        tk.Button(form_frame, text="...", command=show_phong_list, width=3).grid(row=4, column=2, padx=5)
-
-        # Kiểm tra
+        # Thông tin kiểm tra
         info_frame = tk.Frame(main_frame, bg="#e7f3ff", relief="solid", bd=1)
         info_frame.pack(fill="x", padx=30, pady=15)
         tk.Label(info_frame, text="Kiểm tra tính khả dụng",
@@ -203,19 +324,23 @@ class LichKhamForm(tk.Frame):
             if not all([bn, bs, phong, time]):
                 check_label.config(text="Vui lòng điền đầy đủ thông tin!", fg="red")
                 return
+            # Kiểm tra thông tin BN, BS, Phòng có tồn tại không
             try:
                 bn_check = execute_query("SELECT HoTen, SoDienThoai FROM BenhNhan WHERE MaBenhNhan=?", (bn,), fetch=True)
                 if not bn_check:
                     check_label.config(text=f"Mã bệnh nhân {bn} không tồn tại!", fg="red")
                     return
+
                 bs_check = execute_query("SELECT HoTen, ChuyenKhoa FROM BacSi WHERE MaBacSi=?", (bs,), fetch=True)
                 if not bs_check:
                     check_label.config(text=f"Mã bác sĩ {bs} không tồn tại!", fg="red")
                     return
+
                 phong_check = execute_query("SELECT TenPhong FROM PhongKham WHERE MaPhong=?", (phong,), fetch=True)
                 if not phong_check:
                     check_label.config(text=f"Mã phòng {phong} không tồn tại!", fg="red")
                     return
+                # Cập nhật labels với thông tin đầy đủ
                 lbl_bn_info.config(text=f"✓ {bn_check[0][0]} - SĐT: {bn_check[0][1]}")
                 lbl_bs_info.config(text=f"✓ {bs_check[0][0]} - {bs_check[0][1]}")
                 lbl_phong_info.config(text=f"✓ {phong_check[0][0]}")
@@ -231,13 +356,13 @@ class LichKhamForm(tk.Frame):
                 count_phong = execute_query(
                     "SELECT COUNT(*) FROM LichKham WHERE MaPhong = ? AND CAST(NgayGioKham AS DATE) = ? AND TrangThai != N'Đã hủy'",
                     (phong, date_str), fetch=True)[0][0]
-                info_text = f"Đã có thể đặt lịch!\n\n"
+                info_text = f"✅ Có thể đặt lịch!\n\n"
                 info_text += f"• Bác sĩ {bs}: {count_bs}/18 ca trong ngày\n"
                 info_text += f"• Phòng {phong}: {count_phong}/18 ca trong ngày\n"
                 info_text += f"• Thời gian: {time} (Trống)"
                 check_label.config(text=info_text, fg="green")
             else:
-                check_label.config(text=f"Không thể đặt: {msg}", fg="red")
+                check_label.config(text=f"❌ {msg}", fg="red")
 
         def save():
             bn = e_bn.get().strip()
@@ -249,18 +374,23 @@ class LichKhamForm(tk.Frame):
             if not all([bn, bs, phong, time]):
                 return messagebox.showerror("Lỗi", "Vui lòng điền đầy đủ thông tin!")
 
+            # Kiểm tra định dạng thời gian
             try:
                 datetime.strptime(time, "%Y-%m-%d %H:%M")
             except ValueError:
-                return messagebox.showerror("Lỗi", "Định dạng thời gian không đúng! Vui lòng nhập theo format: YYYY-MM-DD HH:MM")
+                return messagebox.showerror("Lỗi",
+                                            "Định dạng thời gian không đúng! Vui lòng nhập theo format: YYYY-MM-DD HH:MM")
 
+            # Kiểm tra tồn tại các mã
             try:
                 bn_check = execute_query("SELECT HoTen FROM BenhNhan WHERE MaBenhNhan=?", (bn,), fetch=True)
                 if not bn_check:
                     return messagebox.showerror("Lỗi", f"Mã bệnh nhân {bn} không tồn tại!")
+
                 bs_check = execute_query("SELECT HoTen FROM BacSi WHERE MaBacSi=?", (bs,), fetch=True)
                 if not bs_check:
                     return messagebox.showerror("Lỗi", f"Mã bác sĩ {bs} không tồn tại!")
+
                 phong_check = execute_query("SELECT TenPhong FROM PhongKham WHERE MaPhong=?", (phong,), fetch=True)
                 if not phong_check:
                     return messagebox.showerror("Lỗi", f"Mã phòng {phong} không tồn tại!")
@@ -291,48 +421,18 @@ class LichKhamForm(tk.Frame):
         tk.Button(btn_frame, text="Hủy", command=dialog.destroy, bg="#6c757d", fg="white",
                   font=("Arial", 12, "bold"), width=15, height=2).pack(side="left", padx=10)
 
-    def show_list_window(self, parent, title, data, cols, entry, label, format_func):
-        list_window = tk.Toplevel(parent)
-        list_window.title(title)
-        list_window.geometry("700x450")
-
-        tree_frame = tk.Frame(list_window)
-        tree_frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-        tree = ttk.Treeview(tree_frame, columns=cols, show="headings", height=15)
-        for col in cols:
-            tree.heading(col, text=col)
-            tree.column(col, width=200, anchor="center")
-        vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
-        tree.configure(yscrollcommand=vsb.set)
-        tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
-
-        for row in data:
-            tree.insert("", "end", values=row)
-
-        def chon():
-            sel = tree.selection()
-            if sel:
-                values = tree.item(sel[0], "values")
-                entry.delete(0, tk.END)
-                entry.insert(0, values[0])
-                label.config(text=format_func(values))
-                list_window.destroy()
-
-        btn_frame = tk.Frame(list_window)
-        btn_frame.pack(pady=10)
-        tk.Button(btn_frame, text="Chọn", command=chon, bg="#007acc", fg="white",
-                  font=("Arial", 11, "bold"), width=15).pack(pady=10)
-
     def sua_lich(self):
         sel = self.tree.selection()
         if not sel:
             return messagebox.showwarning("Chọn", "Vui lòng chọn lịch cần sửa!")
+
         values = self.tree.item(sel[0], "values")
         ma_lich, ma_bn, ma_bs, ma_phong, ngay_gio, trang_thai = values
+
+        # KHÔNG cho sửa lịch đã hủy
         if trang_thai == "Đã hủy":
             return messagebox.showwarning("Lỗi", "Không thể sửa lịch đã hủy! Hãy tạo lịch mới.")
+
         self.open_dialog_sua_lich(ma_lich, ma_bn, ma_bs, ma_phong, ngay_gio, trang_thai)
 
     def open_dialog_sua_lich(self, ma_lich, ma_bn, ma_bs, ma_phong, ngay_gio, trang_thai):
@@ -350,33 +450,39 @@ class LichKhamForm(tk.Frame):
         form_frame = tk.Frame(main_frame, bg="white")
         form_frame.pack(padx=30, pady=10)
 
+        # Mã BN
         tk.Label(form_frame, text="Mã Bệnh nhân:", font=("Arial", 11, "bold"),
                  bg="white").grid(row=0, column=0, padx=10, pady=10, sticky="w")
         e_bn = tk.Entry(form_frame, width=30, font=("Arial", 11))
         e_bn.grid(row=0, column=1, padx=10, pady=10)
         e_bn.insert(0, ma_bn)
 
+        # Mã BS
         tk.Label(form_frame, text="Mã Bác sĩ:", font=("Arial", 11, "bold"),
                  bg="white").grid(row=1, column=0, padx=10, pady=10, sticky="w")
         e_bs = tk.Entry(form_frame, width=30, font=("Arial", 11))
         e_bs.grid(row=1, column=1, padx=10, pady=10)
         e_bs.insert(0, ma_bs)
 
+        # Mã Phòng
         tk.Label(form_frame, text="Mã Phòng:", font=("Arial", 11, "bold"),
                  bg="white").grid(row=2, column=0, padx=10, pady=10, sticky="w")
         e_phong = tk.Entry(form_frame, width=30, font=("Arial", 11))
         e_phong.grid(row=2, column=1, padx=10, pady=10)
         e_phong.insert(0, ma_phong)
 
+        # Ngày giờ
         tk.Label(form_frame, text="Ngày giờ:", font=("Arial", 11, "bold"),
                  bg="white").grid(row=3, column=0, padx=10, pady=10, sticky="w")
         e_time = tk.Entry(form_frame, width=30, font=("Arial", 11))
         e_time.grid(row=3, column=1, padx=10, pady=10)
-        ngay_gio_simple = str(ngay_gio).split('.')[0]
+        # Chuyển đổi định dạng thời gian (bỏ giây nếu có)
+        ngay_gio_simple = ngay_gio.split('.')[0]  # Bỏ phần giây nếu có
         e_time.insert(0, ngay_gio_simple)
         tk.Label(form_frame, text="(VD: 2025-11-15 09:30)",
                  font=("Arial", 9, "italic"), bg="white", fg="#666").grid(row=4, column=1, sticky="w", padx=10)
 
+        # Trạng thái
         tk.Label(form_frame, text="Trạng thái:", font=("Arial", 11, "bold"),
                  bg="white").grid(row=5, column=0, padx=10, pady=10, sticky="w")
         status_var = tk.StringVar(value=trang_thai)
@@ -397,11 +503,14 @@ class LichKhamForm(tk.Frame):
             if not all([bn, bs, phong, time]):
                 return messagebox.showerror("Lỗi", "Vui lòng điền đầy đủ thông tin!")
 
+            # Kiểm tra định dạng thời gian
             try:
                 datetime.strptime(time, "%Y-%m-%d %H:%M")
             except ValueError:
-                return messagebox.showerror("Lỗi", "Định dạng thời gian không đúng! Vui lòng nhập theo format: YYYY-MM-DD HH:MM")
+                return messagebox.showerror("Lỗi",
+                                            "Định dạng thời gian không đúng! Vui lòng nhập theo format: YYYY-MM-DD HH:MM")
 
+            # Kiểm tra trùng lịch (loại trừ lịch hiện tại)
             is_valid, msg = kiem_tra_trung_lich(bs, phong, time, ma_lich_hien_tai=ma_lich)
             if not is_valid:
                 return messagebox.showerror("Lỗi", msg)
